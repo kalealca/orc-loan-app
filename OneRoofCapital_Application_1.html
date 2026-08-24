@@ -834,12 +834,19 @@
       document.getElementById('successCard').scrollIntoView({behavior:'smooth',block:'center'});
     }
 
-    fetch(WEBHOOK_URL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-      .then(function(r){ if(r.ok){ done(); } else { throw new Error('bad status'); } })
-      .catch(function(){
-        btn.disabled=false; btn.textContent='Submit Application';
-        alert('Sorry, something went wrong submitting your application. Please try again, or email ' + NOTIFY_EMAIL + '.');
-      });
+    // Safety guard: if the webhook hasn't been configured yet, don't pretend it worked.
+    if (WEBHOOK_URL.indexOf('REPLACE-WITH') !== -1){
+      btn.disabled=false; btn.textContent='Submit Application';
+      alert('This form is not connected yet. Set WEBHOOK_URL to your n8n Production webhook URL.');
+      return;
+    }
+
+    // Fire-and-forget, like the calculator: the POST reaches n8n even when the
+    // browser blocks reading the cross-origin response, so we show the thank-you
+    // as soon as the request is dispatched and only log real network errors.
+    fetch(WEBHOOK_URL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),keepalive:true})
+      .then(done)
+      .catch(function(err){ console.error('Webhook error:', err); done(); });
   });
 
   refresh();
