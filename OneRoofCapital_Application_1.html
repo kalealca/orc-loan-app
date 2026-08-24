@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Roof Capital — Loan Application</title>
+<style>
+  /* ==== One Roof Capital application form ==== */
+  :root{
+    --ink:#14293d;          /* deep navy */
+    --ink-2:#1f3b57;
+    --gold:#b6883e;         /* premium accent */
+    --gold-dk:#98702f;
+    --bg:#f6f7f9;
+    --card:#ffffff;
+    --line:#e2e7ee;
+    --muted:#5d6b7a;
+    --text:#22303c;
+    --err:#c0392b;
+    --ok:#2e7d5b;
+    --radius:12px;
+    --shadow:0 2px 8px rgba(20,41,61,.06), 0 12px 32px rgba(20,41,61,.05);
+    --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  .hidden{display:none !important}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:880px;margin:0 auto;padding:0 16px 64px}
+
+  /* Header / brand */
+  .masthead{background:linear-gradient(160deg,var(--ink) 0%,var(--ink-2) 100%);color:#fff;padding:34px 0 30px;margin-bottom:26px}
+  .masthead .inner{max-width:880px;margin:0 auto;padding:0 16px}
+  .brand{display:flex;align-items:center;gap:13px}
+  .brand svg{flex:0 0 auto}
+  .brand .name{font-size:22px;font-weight:700;letter-spacing:.3px;line-height:1.1}
+  .brand .name span{color:var(--gold)}
+  .brand .sub{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#a9baccc;color:rgba(255,255,255,.6);margin-top:2px}
+  .masthead h1{font-size:26px;margin:22px 0 6px;font-weight:700}
+  .masthead p{margin:0;color:rgba(255,255,255,.72);font-size:15px;max-width:620px}
+
+  /* Progress bar */
+  .pbar{height:5px;background:rgba(255,255,255,.18);border-radius:99px;margin-top:22px;overflow:hidden}
+  .pbar > i{display:block;height:100%;width:8%;background:var(--gold);border-radius:99px;transition:width .4s ease}
+
+  /* Cards / sections */
+  .section{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px 24px 8px;margin-bottom:20px}
+  .section > h2{font-size:13px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold-dk);margin:0 0 4px;font-weight:700}
+  .section > .lead{color:var(--muted);font-size:14px;margin:0 0 20px}
+  .section.hidden{display:none}
+
+  /* Grid + fields */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 18px}
+  .field{display:flex;flex-direction:column;margin-bottom:16px}
+  .field.col-2{grid-column:span 2}
+  .field.hidden{display:none}
+  label{font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:7px}
+  label .req{color:var(--gold-dk);margin-left:2px}
+  .hint{font-size:12px;color:var(--muted);font-weight:400;margin-top:5px}
+  input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],select,textarea{
+    width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:14.5px;font-family:inherit;color:var(--text);background:#fdfdfe;transition:border-color .15s,box-shadow .15s}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(182,136,62,.15)}
+  textarea{min-height:96px;resize:vertical}
+  select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%235d6b7a' stroke-width='1.6' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+  .prefix{position:relative}
+  .prefix > span{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14.5px;pointer-events:none}
+  .prefix input{padding-left:26px}
+
+  /* radios / checkbox pills */
+  .pills{display:flex;flex-wrap:wrap;gap:9px}
+  .pill{position:relative}
+  .pill input{position:absolute;opacity:0;inset:0;cursor:pointer}
+  .pill span{display:inline-block;padding:9px 16px;border:1px solid var(--line);border-radius:99px;font-size:13.5px;cursor:pointer;background:#fdfdfe;transition:.15s;color:var(--text)}
+  .pill input:checked + span{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .pill input:focus-visible + span{box-shadow:0 0 0 3px rgba(182,136,62,.25)}
+
+  .checks{display:flex;flex-wrap:wrap;gap:9px}
+  .chk{position:relative}
+  .chk input{position:absolute;opacity:0}
+  .chk span{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border:1px solid var(--line);border-radius:9px;font-size:13.5px;cursor:pointer;background:#fdfdfe;transition:.15s}
+  .chk span::before{content:"";width:15px;height:15px;border:1.5px solid #b7c0cc;border-radius:4px;display:inline-block;transition:.15s}
+  .chk input:checked + span{border-color:var(--gold)}
+  .chk input:checked + span::before{background:var(--gold);border-color:var(--gold);box-shadow:inset 0 0 0 2px #fff}
+
+  .toggle-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px dashed var(--line);border-radius:10px;background:#fbfcfd;margin-bottom:16px}
+  .toggle-row label{margin:0;cursor:pointer}
+  .switch{position:relative;width:44px;height:24px;flex:0 0 auto}
+  .switch input{opacity:0;width:0;height:0;position:absolute}
+  .switch .track{position:absolute;inset:0;background:#c9d2dc;border-radius:99px;transition:.2s;cursor:pointer}
+  .switch .track::before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+  .switch input:checked + .track{background:var(--gold)}
+  .switch input:checked + .track::before{transform:translateX(20px)}
+
+  .subblock{border-left:3px solid var(--gold);background:#fbfaf7;border-radius:0 10px 10px 0;padding:18px 18px 2px;margin:4px 0 16px}
+  .subblock h3{font-size:14px;margin:0 0 14px;color:var(--ink)}
+
+  .divider{height:1px;background:var(--line);margin:4px 0 18px}
+  .note{grid-column:span 2;font-size:12.5px;color:var(--muted);background:#f4f1ea;border:1px solid #ece5d5;border-radius:9px;padding:11px 13px;margin-bottom:16px}
+
+  /* errors */
+  .field.invalid input,.field.invalid select,.field.invalid textarea{border-color:var(--err);background:#fdf3f2}
+  .err-msg{display:none;color:var(--err);font-size:12px;margin-top:5px}
+  .field.invalid .err-msg{display:block}
+
+  /* submit */
+  .actions{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:6px}
+  .btn{background:var(--gold);color:#fff;border:none;padding:14px 30px;font-size:15px;font-weight:700;border-radius:10px;cursor:pointer;font-family:inherit;transition:.15s;box-shadow:0 4px 14px rgba(182,136,62,.3)}
+  .btn:hover{background:var(--gold-dk)}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .disclaimer{font-size:12px;color:var(--muted);max-width:440px}
+
+  .success{display:none;text-align:center;padding:48px 24px}
+  .success.show{display:block}
+  .success .tick{width:64px;height:64px;border-radius:50%;background:#eaf6ef;color:var(--ok);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:32px}
+  .success h2{color:var(--ink);margin:0 0 8px}
+  .success p{color:var(--muted);margin:0 auto;max-width:460px}
+
+  .footer{text-align:center;color:var(--muted);font-size:12.5px;margin-top:8px}
+  .footer strong{color:var(--ink)}
+
+  @media (max-width:640px){
+    .grid{grid-template-columns:1fr}
+    .field.col-2{grid-column:span 1}
+    .note{grid-column:span 1}
+    .masthead h1{font-size:22px}
+  }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="inner">
+    <h1>Loan Application</h1>
+    <p>Tell us about your project and we'll match you with the right financing. It takes just a few minutes — a member of our team will follow up shortly.</p>
+    <div class="pbar"><i id="pbarFill"></i></div>
+  </div>
+</div>
+
+<div class="wrap">
+<form id="appForm" novalidate>
+
+  <!-- ============ 1. PROGRAM & LEAD ============ -->
+  <div class="section">
+    <h2>Loan Program</h2>
+    <p class="lead">What are you looking to finance?</p>
+    <div class="grid">
+      <div class="field col-2">
+        <label for="program">What kind of program are you looking for? <span class="req">*</span></label>
+        <select id="program" name="program" required>
+          <option value="">— Select —</option>
+          <option>Blanket/Portfolio Loan</option>
+          <option>Bridge Loan</option>
+          <option>Fix and Flip</option>
+          <option>Rental Loan</option>
+          <option>Transactional Funding</option>
+        </select>
+        <div class="err-msg">Please select a program.</div>
+      </div>
+      <div class="field">
+        <label for="process">Where are you in the process?</label>
+        <select id="process" name="process">
+          <option value="">— Select —</option>
+          <option>Looking for General Info</option>
+          <option>Actively Looking For Property</option>
+          <option>Identified a Property</option>
+          <option>Have Property Under Contract</option>
+          <option>I Own The Property/Land</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="leadSource">How did you hear about us?</label>
+        <select id="leadSource" name="leadSource">
+          <option value="">— Select —</option>
+          <option>Facebook</option>
+          <option>Referral</option>
+          <option>Google Search</option>
+          <option>One Roof Website</option>
+          <option>Event</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 2. BORROWER / CONTACT ============ -->
+  <div class="section">
+    <h2>Your Information</h2>
+    <p class="lead">How can we reach you?</p>
+    <div class="grid">
+      <div class="field">
+        <label for="fName">First Name <span class="req">*</span></label>
+        <input type="text" id="fName" name="fName" required>
+        <div class="err-msg">Required.</div>
+      </div>
+      <div class="field">
+        <label for="lName">Last Name <span class="req">*</span></label>
+        <input type="text" id="lName" name="lName" required>
+        <div class="err-msg">Required.</div>
+      </div>
+      <div class="field">
+        <label for="email">Email <span class="req">*</span></label>
+        <input type="email" id="email" name="email" required>
+        <div class="err-msg">Enter a valid email.</div>
+      </div>
+      <div class="field">
+        <label for="cell">Cell Phone <span class="req">*</span></label>
+        <input type="tel" id="cell" name="cell" required>
+        <div class="err-msg">Required.</div>
+      </div>
+      <div class="field">
+        <label for="workPhone">Work Phone</label>
+        <input type="tel" id="workPhone" name="workPhone">
+      </div>
+      <div class="field">
+        <label>Preferred Communication</label>
+        <div class="checks">
+          <label class="chk"><input type="checkbox" name="comm" value="Phone"><span>Phone</span></label>
+          <label class="chk"><input type="checkbox" name="comm" value="E-mail"><span>E-mail</span></label>
+          <label class="chk"><input type="checkbox" name="comm" value="Text"><span>Text</span></label>
+        </div>
+      </div>
+
+      <div class="field col-2"><div class="divider"></div></div>
+
+      <div class="field col-2">
+        <label for="address">Mailing Address</label>
+        <input type="text" id="address" name="address" placeholder="Street address">
+      </div>
+      <div class="field">
+        <label for="city">City</label>
+        <input type="text" id="city" name="city">
+      </div>
+      <div class="field">
+        <label for="state">State</label>
+        <select id="state" name="state"><option value="">— Select —</option></select>
+      </div>
+      <div class="field">
+        <label for="zip">Zip Code</label>
+        <input type="text" id="zip" name="zip" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="ssn">Social Security Number</label>
+        <input type="text" id="ssn" name="ssn" placeholder="Optional — for full application" autocomplete="off">
+        <div class="hint">Only needed once you move forward. Leave blank if you'd rather share later.</div>
+      </div>
+      <div class="field">
+        <label>Citizenship</label>
+        <div class="pills">
+          <label class="pill"><input type="radio" name="citizenship" value="U.S. Citizen"><span>U.S. Citizen</span></label>
+          <label class="pill"><input type="radio" name="citizenship" value="Perm Resident Alien"><span>Perm Resident</span></label>
+          <label class="pill"><input type="radio" name="citizenship" value="Non-Perm Resident Alien"><span>Non-Perm Resident</span></label>
+          <label class="pill"><input type="radio" name="citizenship" value="Foreign National"><span>Foreign National</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <label for="credit">Credit Score Range</label>
+        <select id="credit" name="credit">
+          <option value="">— Select —</option>
+          <option>720 +</option>
+          <option>680 - 719</option>
+          <option>620 - 679</option>
+          <option>600 - 619</option>
+          <option>580 - 599</option>
+          <option>580 or Below</option>
+          <option>Foreign National - No Score</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="borrowerType">Borrower Type</label>
+        <select id="borrowerType" name="borrowerType">
+          <option value="">— Select —</option>
+          <option>Individual</option>
+          <option>Entity</option>
+          <option>Trust</option>
+          <option>Retirement Entity</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Conditional: Entity -->
+    <div class="subblock hidden" id="entityBlock" data-show-borrower="Entity">
+      <h3>Entity Details</h3>
+      <div class="grid">
+        <div class="field">
+          <label for="entityName">Entity Name</label>
+          <input type="text" id="entityName" name="entityName">
+        </div>
+        <div class="field">
+          <label for="entityType">Entity Type</label>
+          <select id="entityType" name="entityType">
+            <option value="">— Select —</option>
+            <option>LLC</option>
+            <option>Corporation</option>
+            <option>Partnership</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="entityState">State of Formation</label>
+          <select id="entityState" name="entityState"><option value="">— Select —</option></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Co-borrower toggle -->
+    <div class="toggle-row">
+      <div class="switch"><input type="checkbox" id="hasCoB" name="hasCoB"><span class="track"></span></div>
+      <label for="hasCoB">Is there a co-borrower?</label>
+    </div>
+    <div class="subblock hidden" id="coBBlock">
+      <h3>Co-Borrower Information</h3>
+      <div class="grid">
+        <div class="field"><label>First Name</label><input type="text" name="coB_fName"></div>
+        <div class="field"><label>Last Name</label><input type="text" name="coB_lName"></div>
+        <div class="field"><label>Email</label><input type="email" name="coB_email"></div>
+        <div class="field"><label>Cell Phone</label><input type="tel" name="coB_cell"></div>
+        <div class="field"><label>Social Security Number</label><input type="text" name="coB_ssn" autocomplete="off"></div>
+        <div class="field">
+          <label>Credit Score Range</label>
+          <select name="coB_credit">
+            <option value="">— Select —</option>
+            <option>720 +</option><option>680 - 719</option><option>620 - 679</option>
+            <option>600 - 619</option><option>580 - 599</option><option>580 or Below</option>
+            <option>Foreign National - No Score</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 3. LOAN DETAILS ============ -->
+  <div class="section">
+    <h2>Loan Details</h2>
+    <p class="lead">Tell us about the financing you need.</p>
+    <div class="grid">
+      <div class="field">
+        <label for="loanAmount">Desired Loan Amount</label>
+        <div class="prefix"><span>$</span><input type="text" id="loanAmount" name="loanAmount" inputmode="numeric"></div>
+      </div>
+      <div class="field">
+        <label for="loanTerm">Loan Term</label>
+        <select id="loanTerm" name="loanTerm">
+          <option value="">— Select —</option>
+          <option>1 Month</option><option>6 Months</option><option>9 Months</option><option>12 Months</option>
+        </select>
+      </div>
+      <div class="field col-2">
+        <label for="txType">Transaction Type</label>
+        <select id="txType" name="txType">
+          <option value="">— Select —</option>
+          <option>Purchase</option>
+          <option>Commercial Purchase</option>
+          <option>New Construction - Existing Land</option>
+          <option>Transactional</option>
+          <option>Refinance</option>
+          <option>Delayed Purchase</option>
+          <option>Cash-Out / Refinance</option>
+          <option>Rate &amp; Term Refinance</option>
+          <option>Commercial Cash Out Refinance</option>
+          <option>Commercial Rate / Term Refinance</option>
+          <option>Line of Credit</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="purchasePrice">Purchase Price / Cost Basis</label>
+        <div class="prefix"><span>$</span><input type="text" id="purchasePrice" name="purchasePrice" inputmode="numeric"></div>
+      </div>
+      <div class="field">
+        <label>Will the borrower personally guarantee the loan?</label>
+        <div class="pills">
+          <label class="pill"><input type="radio" name="personalGuarantee" value="Yes"><span>Yes</span></label>
+          <label class="pill"><input type="radio" name="personalGuarantee" value="No"><span>No</span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conditional: construction / rehab -->
+    <div class="subblock hidden" id="constrBlock">
+      <h3>Construction / Rehab Budget</h3>
+      <div class="grid">
+        <div class="field"><label>ARV (After-Repair Value)</label><div class="prefix"><span>$</span><input type="text" name="arv" inputmode="numeric"></div></div>
+        <div class="field"><label>Rehab / Construction Cost</label><div class="prefix"><span>$</span><input type="text" name="rehabCost" inputmode="numeric"></div></div>
+        <div class="field"><label>% of Rehab to be Financed</label><input type="text" name="rehabPct" inputmode="numeric" placeholder="e.g. 90"></div>
+        <div class="field"><label>Cost Basis Already Spent</label><div class="prefix"><span>$</span><input type="text" name="costSpent" inputmode="numeric"></div></div>
+      </div>
+    </div>
+
+    <!-- Conditional: refinance -->
+    <div class="subblock hidden" id="refiBlock">
+      <h3>Refinance Details</h3>
+      <div class="grid">
+        <div class="field"><label>Current Loan Balance</label><div class="prefix"><span>$</span><input type="text" name="curBalance" inputmode="numeric"></div></div>
+        <div class="field"><label>Current Lender</label><input type="text" name="curLender"></div>
+        <div class="field"><label>Current Rate</label><input type="text" name="curRate" placeholder="%"></div>
+        <div class="field"><label>Monthly Payment</label><div class="prefix"><span>$</span><input type="text" name="curPayment" inputmode="numeric"></div></div>
+        <div class="field"><label>Original Purchase Date</label><input type="date" name="origDate"></div>
+        <div class="field"><label>Original Purchase Price</label><div class="prefix"><span>$</span><input type="text" name="origPrice" inputmode="numeric"></div></div>
+        <div class="field"><label>Cost of Improvements Made</label><div class="prefix"><span>$</span><input type="text" name="improvements" inputmode="numeric"></div></div>
+        <div class="field"><label>Pay Off Outstanding Taxes</label><div class="prefix"><span>$</span><input type="text" name="payoffTaxes" inputmode="numeric"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 4. SUBJECT PROPERTY ============ -->
+  <div class="section">
+    <h2>Subject Property</h2>
+    <p class="lead">Details on the property being financed.</p>
+    <div class="grid">
+      <div class="field col-2">
+        <label for="propAddress">Property Address</label>
+        <input type="text" id="propAddress" name="propAddress" placeholder="Street address">
+      </div>
+      <div class="field"><label for="propUnit">Unit #</label><input type="text" id="propUnit" name="propUnit"></div>
+      <div class="field"><label for="propCity">City</label><input type="text" id="propCity" name="propCity"></div>
+      <div class="field">
+        <label for="propState">State</label>
+        <select id="propState" name="propState">
+          <option value="">— Select —</option>
+          <option>Arizona</option><option>Florida</option><option>Kansas</option>
+          <option>Missouri</option><option>Oklahoma</option><option>Texas</option>
+        </select>
+        <div class="hint">One Roof Capital currently lends in these states.</div>
+      </div>
+      <div class="field"><label for="propZip">Zip Code</label><input type="text" id="propZip" name="propZip" inputmode="numeric"></div>
+      <div class="field">
+        <label for="propType">Property Type</label>
+        <select id="propType" name="propType">
+          <option value="">— Select —</option>
+          <option>Single Family</option><option>Condo</option><option>Duplex</option>
+          <option>3 Units</option><option>4 Units</option><option>Multi-Family 5+</option>
+          <option>Mixed Use</option><option>Commercial</option>
+        </select>
+      </div>
+      <div class="field"><label for="estValue">Estimated Value</label><div class="prefix"><span>$</span><input type="text" id="estValue" name="estValue" inputmode="numeric"></div></div>
+      <div class="field prog-field" data-programs="Fix and Flip|Rental Loan|Transactional Funding">
+        <label for="propCondition">Property Condition</label>
+        <select id="propCondition" name="propCondition">
+          <option value="">— Select —</option>
+          <option>Excellent</option><option>Good</option><option>Average</option>
+          <option>Fair</option><option>Poor</option><option>Uninhabitable</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 5. PROGRAM-SPECIFIC ============ -->
+  <div class="section hidden" id="progSection">
+    <h2>Project Details</h2>
+    <p class="lead">A few more questions specific to your program.</p>
+    <div class="grid">
+      <div class="field prog-field" data-programs="Fix and Flip|Rental Loan">
+        <label>Real estate investment experience?</label>
+        <div class="pills">
+          <label class="pill"><input type="radio" name="experience" value="Yes"><span>Yes</span></label>
+          <label class="pill"><input type="radio" name="experience" value="No"><span>No</span></label>
+        </div>
+      </div>
+      <div class="field prog-field" data-programs="Fix and Flip|Rental Loan|Bridge Loan|Blanket/Portfolio Loan">
+        <label for="liquidAssets">Liquid assets available</label>
+        <div class="prefix"><span>$</span><input type="text" id="liquidAssets" name="liquidAssets" inputmode="numeric"></div>
+      </div>
+      <div class="field prog-field" data-programs="Fix and Flip|Rental Loan|Bridge Loan|Blanket/Portfolio Loan">
+        <label for="strategy">Primary investment strategy</label>
+        <select id="strategy" name="strategy">
+          <option value="">— Select —</option>
+          <option>Fix &amp; Flip</option><option>Fix &amp; Hold</option><option>Wholesale/Re-sale</option>
+          <option>Refi</option><option>Long Term Rental</option><option>Short Term Rental</option>
+          <option>AirBnb</option><option>Build and Sell</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field prog-field" data-programs="Fix and Flip">
+        <label>Does the property need rehab?</label>
+        <div class="pills">
+          <label class="pill"><input type="radio" name="needRehab" value="Yes"><span>Yes</span></label>
+          <label class="pill"><input type="radio" name="needRehab" value="No"><span>No</span></label>
+        </div>
+      </div>
+      <div class="field prog-field" data-programs="Fix and Flip|Rental Loan|Transactional Funding">
+        <label for="exitPlan">Loan / Exit Plan</label>
+        <select id="exitPlan" name="exitPlan">
+          <option value="">— Select —</option>
+          <option>Fix &amp; Flip</option><option>Fix &amp; Hold</option><option>Wholesale/Re-sale</option><option>Refi</option>
+        </select>
+      </div>
+      <div class="field prog-field" data-programs="Fix and Flip|Rental Loan|Transactional Funding">
+        <label for="rentalIncome">Projected rental income / month</label>
+        <div class="prefix"><span>$</span><input type="text" id="rentalIncome" name="rentalIncome" inputmode="numeric"></div>
+      </div>
+      <div class="field col-2 prog-field" data-programs="Fix and Flip|Rental Loan|Transactional Funding">
+        <label for="exitExplain">Loan / Exit Plan Explanation</label>
+        <textarea id="exitExplain" name="exitExplain"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 6. SCENARIO ============ -->
+  <div class="section">
+    <h2>Anything Else?</h2>
+    <p class="lead">Tell us more about your scenario and what you're looking for.</p>
+    <div class="grid">
+      <div class="field col-2">
+        <label for="notes">Scenario details</label>
+        <textarea id="notes" name="notes" placeholder="Timeline, deal specifics, questions for our team..."></textarea>
+      </div>
+    </div>
+    <div class="actions">
+      <p class="disclaimer">By submitting, you agree to be contacted by One Roof Capital about your inquiry. Submitting this form is not a loan commitment or approval.</p>
+      <button type="submit" class="btn" id="submitBtn">Submit Application</button>
+    </div>
+  </div>
+</form>
+
+<!-- Success state -->
+<div class="section success" id="successCard">
+  <div class="tick">&#10003;</div>
+  <h2>Thank you — your application is in.</h2>
+  <p>A member of the One Roof Capital team will review your information and reach out shortly. If you need us sooner, email <strong id="successEmail"></strong>.</p>
+</div>
+
+<p class="footer">One Roof <strong>Capital</strong> LLC &nbsp;·&nbsp; Real Estate Investment Lending</p>
+</div>
+
+<script>
+/* ============================================================
+   CONFIGURATION  —  edit these two lines
+   ------------------------------------------------------------
+   FORM_ENDPOINT : paste a form-service POST URL (Formspree,
+                   Web3Forms, Getform, etc.) to have submissions
+                   emailed to you automatically. Leave blank ("")
+                   and the form falls back to opening the visitor's
+                   email app addressed to NOTIFY_EMAIL.
+   NOTIFY_EMAIL  : where applications should be sent.
+   ============================================================ */
+  const FORM_ENDPOINT = "";                        // e.g. "https://formspree.io/f/xxxxxxx"
+  const NOTIFY_EMAIL  = "ken@oneroofkc.com, alex@oneroofkc.com";   // intake inbox(es), comma-separated
+/* ============================================================ */
+
+(function(){
+  var form = document.getElementById('appForm');
+
+  // Populate state dropdowns (full US list) for mailing + entity
+  var STATES = ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","District of Columbia","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"];
+  ["state","entityState"].forEach(function(id){
+    var sel = document.getElementById(id);
+    STATES.forEach(function(s){ var o=document.createElement('option'); o.textContent=s; sel.appendChild(o); });
+  });
+
+  document.getElementById('successEmail').textContent = NOTIFY_EMAIL;
+
+  var program      = document.getElementById('program');
+  var borrowerType = document.getElementById('borrowerType');
+  var txType       = document.getElementById('txType');
+  var hasCoB       = document.getElementById('hasCoB');
+
+  var CONSTR_TX = ["New Construction - Existing Land"];
+  var REFI_TX   = ["Refinance","Cash-Out / Refinance","Rate & Term Refinance","Commercial Cash Out Refinance","Commercial Rate / Term Refinance"];
+
+  function show(el,on){ el.classList.toggle('hidden', !on); }
+
+  function refresh(){
+    var p = program.value;
+
+    // program-specific section + per-field program targeting
+    var anyProg = false;
+    document.querySelectorAll('.prog-field').forEach(function(f){
+      var list = (f.getAttribute('data-programs')||"").split('|');
+      var on = p && list.indexOf(p) !== -1;
+      show(f, on);
+      if(on && f.closest('#progSection')) anyProg = true;
+    });
+    show(document.getElementById('progSection'), anyProg);
+
+    // entity
+    show(document.getElementById('entityBlock'), borrowerType.value === 'Entity');
+    // co-borrower
+    show(document.getElementById('coBBlock'), hasCoB.checked);
+    // transaction-driven blocks
+    var needRehab = document.querySelector('input[name="needRehab"]:checked');
+    var rehabByProgram = (p === 'Fix and Flip' && needRehab && needRehab.value === 'Yes');
+    show(document.getElementById('constrBlock'), CONSTR_TX.indexOf(txType.value) !== -1 || rehabByProgram);
+    show(document.getElementById('refiBlock'), REFI_TX.indexOf(txType.value) !== -1);
+
+    updateProgress();
+  }
+
+  function updateProgress(){
+    var fields = Array.prototype.filter.call(form.querySelectorAll('input,select,textarea'), function(el){
+      return el.offsetParent !== null && el.type !== 'submit' && el.type !== 'radio' && el.type !== 'checkbox';
+    });
+    var filled = fields.filter(function(el){ return el.value.trim() !== ''; }).length;
+    var pct = fields.length ? Math.max(8, Math.round(filled/fields.length*100)) : 8;
+    document.getElementById('pbarFill').style.width = pct + '%';
+  }
+
+  form.addEventListener('change', refresh);
+  form.addEventListener('input', updateProgress);
+  program.addEventListener('change', function(){ document.getElementById('progSection').scrollIntoView({behavior:'smooth',block:'nearest'}); });
+
+  // ---- validation ----
+  function validate(){
+    var ok = true;
+    form.querySelectorAll('[required]').forEach(function(el){
+      var field = el.closest('.field');
+      var valid = el.value.trim() !== '' && !(el.type==='email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(el.value));
+      if(el.offsetParent === null) valid = true; // skip hidden
+      field.classList.toggle('invalid', !valid);
+      if(!valid) ok = false;
+    });
+    return ok;
+  }
+
+  // ---- submit ----
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!validate()){
+      var firstErr = form.querySelector('.field.invalid');
+      if(firstErr) firstErr.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.textContent = 'Submitting…';
+
+    // Collect data (visible fields only)
+    var data = {};
+    form.querySelectorAll('input,select,textarea').forEach(function(el){
+      if(!el.name || el.type==='submit') return;
+      if(el.offsetParent === null && el.type!=='checkbox' && el.type!=='radio') return;
+      if(el.type==='checkbox'){ if(el.checked){ (data[el.name]=data[el.name]||[]).push ? data[el.name].push(el.value) : (data[el.name]=[el.value]); } }
+      else if(el.type==='radio'){ if(el.checked) data[el.name]=el.value; }
+      else if(el.value.trim()!=='') data[el.name]=el.value.trim();
+    });
+    data['_program'] = program.value;
+
+    function done(){
+      form.style.display='none';
+      document.getElementById('successCard').classList.add('show');
+      document.getElementById('successCard').scrollIntoView({behavior:'smooth',block:'center'});
+    }
+
+    if(FORM_ENDPOINT){
+      fetch(FORM_ENDPOINT, {method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(data)})
+        .then(function(r){ if(r.ok){ done(); } else { throw new Error('bad status'); } })
+        .catch(function(){
+          btn.disabled=false; btn.textContent='Submit Application';
+          alert('Sorry, something went wrong sending your application. Please email ' + NOTIFY_EMAIL + ' directly.');
+        });
+    } else {
+      // Fallback: open the visitor's email client pre-filled
+      var lines = Object.keys(data).map(function(k){
+        var v = Array.isArray(data[k]) ? data[k].join(', ') : data[k];
+        return k + ': ' + v;
+      });
+      var subject = 'Loan Application — ' + (data.fName||'') + ' ' + (data.lName||'') + ' (' + program.value + ')';
+      var body = 'New loan application from the One Roof Capital website:\n\n' + lines.join('\n');
+      window.location.href = 'mailto:' + NOTIFY_EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+      setTimeout(done, 600);
+    }
+  });
+
+  refresh();
+})();
+</script>
+</body>
+</html>
