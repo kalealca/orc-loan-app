@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>One Roof Capital — Loan Application</title>
+<!-- Google Maps Extended Component Library (same as the Pagebrook calculator) -->
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/@googlemaps/extended-component-library/0.6.11/index.min.js"></script>
 <style>
   /* ==== One Roof Capital application form ==== */
   :root{
@@ -24,6 +26,10 @@
   }
   *{box-sizing:border-box}
   .hidden{display:none !important}
+  /* Google place picker — match form inputs */
+  gmpx-place-picker{width:100%;display:block;--gmpx-color-primary:#b6883e;--gmpx-font-family-base:var(--font);}
+  .addr-msg{font-size:12px;margin-top:5px;min-height:14px}
+  .addr-msg.ok{color:#2e7d5b}
   body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased}
   .wrap{max-width:880px;margin:0 auto;padding:0 16px 64px}
 
@@ -127,6 +133,9 @@
 </head>
 <body>
 
+<!-- Google Maps API loader — swap the key for your own restricted key (Maps JS + Places enabled) -->
+<gmpx-api-loader key="AIzaSyDCNlkcUWToVFNAV03OwiHfouIvmo8UpUE" solution-channel="GMP_GE_placepicker_v2"></gmpx-api-loader>
+
 <div class="masthead">
   <div class="inner">
     <h1>Loan Application</h1>
@@ -209,6 +218,7 @@
       <div class="field">
         <label for="workPhone">Work Phone</label>
         <input type="tel" id="workPhone" name="workPhone">
+        <div class="err-msg">Please enter a valid phone number.</div>
       </div>
       <div class="field">
         <label>Preferred Communication</label>
@@ -222,8 +232,10 @@
       <div class="field col-2"><div class="divider"></div></div>
 
       <div class="field col-2">
-        <label for="address">Mailing Address</label>
-        <input type="text" id="address" name="address" placeholder="Street address">
+        <label>Mailing Address</label>
+        <gmpx-place-picker id="addressPicker" placeholder="Start typing your address…" country="US"></gmpx-place-picker>
+        <input type="text" id="address" name="address" placeholder="Street address" style="margin-top:8px">
+        <div class="addr-msg" id="addressMsg"></div>
       </div>
       <div class="field">
         <label for="city">City</label>
@@ -311,8 +323,8 @@
       <div class="grid">
         <div class="field"><label>First Name</label><input type="text" name="coB_fName"></div>
         <div class="field"><label>Last Name</label><input type="text" name="coB_lName"></div>
-        <div class="field"><label>Email</label><input type="email" name="coB_email"></div>
-        <div class="field"><label>Cell Phone</label><input type="tel" name="coB_cell"></div>
+        <div class="field"><label>Email</label><input type="email" id="coB_email" name="coB_email"><div class="err-msg">Please enter a valid email address.</div></div>
+        <div class="field"><label>Cell Phone</label><input type="tel" id="coB_cell" name="coB_cell"><div class="err-msg">Please enter a valid phone number.</div></div>
         <div class="field"><label>Social Security Number</label><input type="text" name="coB_ssn" autocomplete="off"></div>
         <div class="field">
           <label>Credit Score Range</label>
@@ -406,8 +418,10 @@
     <p class="lead">Details on the property being financed.</p>
     <div class="grid">
       <div class="field col-2">
-        <label for="propAddress">Property Address</label>
-        <input type="text" id="propAddress" name="propAddress" placeholder="Street address">
+        <label>Property Address</label>
+        <gmpx-place-picker id="propAddressPicker" placeholder="Start typing the property address…" country="US"></gmpx-place-picker>
+        <input type="text" id="propAddress" name="propAddress" placeholder="Street address" style="margin-top:8px">
+        <div class="addr-msg" id="propAddressMsg"></div>
       </div>
       <div class="field"><label for="propUnit">Unit #</label><input type="text" id="propUnit" name="propUnit"></div>
       <div class="field"><label for="propCity">City</label><input type="text" id="propCity" name="propCity"></div>
@@ -502,8 +516,12 @@
         <textarea id="notes" name="notes" placeholder="Timeline, deal specifics, questions for our team..."></textarea>
       </div>
     </div>
+    <div class="field col-2">
+      <label class="chk" style="align-items:flex-start"><input type="checkbox" id="consent" name="consent"><span style="font-weight:400;line-height:1.5">I consent to One Roof Capital collecting my contact information and contacting me about my inquiry via email, phone, or text. <span class="req">*</span></span></label>
+      <div class="err-msg" id="consentErr">You must agree to continue.</div>
+    </div>
     <div class="actions">
-      <p class="disclaimer">By submitting, you agree to be contacted by One Roof Capital about your inquiry. Submitting this form is not a loan commitment or approval.</p>
+      <p class="disclaimer">Submitting this form is not a loan commitment or approval.</p>
       <button type="submit" class="btn" id="submitBtn">Submit Application</button>
     </div>
   </div>
@@ -521,17 +539,17 @@
 
 <script>
 /* ============================================================
-   CONFIGURATION  —  edit these two lines
+   CONFIGURATION
    ------------------------------------------------------------
-   FORM_ENDPOINT : paste a form-service POST URL (Formspree,
-                   Web3Forms, Getform, etc.) to have submissions
-                   emailed to you automatically. Leave blank ("")
-                   and the form falls back to opening the visitor's
-                   email app addressed to NOTIFY_EMAIL.
-   NOTIFY_EMAIL  : where applications should be sent.
+   WEBHOOK_URL : the n8n Webhook (Production URL) that receives
+                 this application and emails the lead — same
+                 pattern as the Pagebrook loan calculator.
+                 Paste the URL from your n8n Webhook node here.
+   NOTIFY_EMAIL: shown to the visitor as a "need us sooner?"
+                 contact address (display only).
    ============================================================ */
-  const FORM_ENDPOINT = "";                        // e.g. "https://formspree.io/f/xxxxxxx"
-  const NOTIFY_EMAIL  = "ken@oneroofkc.com, alex@oneroofkc.com";   // intake inbox(es), comma-separated
+  const WEBHOOK_URL  = "https://kenleal.app.n8n.cloud/webhook/REPLACE-WITH-APPLICATION-WEBHOOK-ID";
+  const NOTIFY_EMAIL = "ken@oneroofkc.com, alex@oneroofkc.com";
 /* ============================================================ */
 
 (function(){
@@ -545,6 +563,59 @@
   });
 
   document.getElementById('successEmail').textContent = NOTIFY_EMAIL;
+
+  // ── Google Places address autofill ─────────────────────────
+  // Reads the selected place's address components and fills the
+  // street / city / state / zip fields. Falls back to plain typing
+  // if Google can't load — the manual inputs stay usable.
+  function comp(components, type, useShort){
+    if(!components) return '';
+    for(var i=0;i<components.length;i++){
+      var c = components[i];
+      var types = c.types || [];
+      if(types.indexOf(type) !== -1){ return useShort ? (c.shortText||c.short_name||'') : (c.longText||c.long_name||''); }
+    }
+    return '';
+  }
+  function setSelectByText(sel, text){
+    if(!sel || !text) return false;
+    for(var i=0;i<sel.options.length;i++){ if(sel.options[i].text === text){ sel.selectedIndex = i; return true; } }
+    return false;
+  }
+  function wirePlacePicker(pickerId, ids, msgId){
+    var picker = document.getElementById(pickerId);
+    if(!picker) return;
+    var msg = document.getElementById(msgId);
+    function handle(){
+      setTimeout(function(){
+        var place = picker.value;
+        if(!place) return;
+        var ac = place.addressComponents;
+        var streetNo = comp(ac,'street_number');
+        var route    = comp(ac,'route');
+        var city     = comp(ac,'locality') || comp(ac,'sublocality') || comp(ac,'postal_town');
+        var stateLong= comp(ac,'administrative_area_level_1');
+        var zip      = comp(ac,'postal_code');
+        var street   = (streetNo+' '+route).trim() || (place.displayName || '');
+        if(ids.street){ var s=document.getElementById(ids.street); if(s) s.value = street; }
+        if(ids.city){ var ci=document.getElementById(ids.city); if(ci) ci.value = city; }
+        if(ids.zip){ var z=document.getElementById(ids.zip); if(z) z.value = zip; }
+        if(ids.state){
+          var st=document.getElementById(ids.state);
+          var setOk = setSelectByText(st, stateLong);
+          if(!setOk && st && ids.stateRestricted && stateLong && msg){
+            msg.textContent = '⚠ We currently lend in AZ, FL, KS, MO, OK, and TX — please confirm the state.';
+            msg.className = 'addr-msg';
+          }
+        }
+        if(msg && place.formattedAddress){ msg.textContent = '✓ ' + place.formattedAddress; msg.className = 'addr-msg ok'; }
+        updateProgress();
+      }, 60);
+    }
+    ['gmpx-placechange','change','blur'].forEach(function(ev){ picker.addEventListener(ev, handle); });
+  }
+  wirePlacePicker('addressPicker',     {street:'address',     city:'city',     state:'state',     zip:'zip'}, 'addressMsg');
+  wirePlacePicker('propAddressPicker', {street:'propAddress', city:'propCity', state:'propState', zip:'propZip', stateRestricted:true}, 'propAddressMsg');
 
   var program      = document.getElementById('program');
   var borrowerType = document.getElementById('borrowerType');
@@ -596,22 +667,56 @@
   program.addEventListener('change', function(){ document.getElementById('progSection').scrollIntoView({behavior:'smooth',block:'nearest'}); });
 
   // ---- validation ----
+  function isEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+  function isPhone(v){ var digits=(v.match(/\d/g)||[]).length; return /^[0-9+\-\s().]{9,20}$/.test(v) && digits>=10 && digits<=15; }
+  function mark(el, valid, msg){
+    var field = el.closest('.field');
+    field.classList.toggle('invalid', !valid);
+    if(!valid && msg){ var m = field.querySelector('.err-msg'); if(m) m.textContent = msg; }
+    return valid;
+  }
   function validate(){
     var ok = true;
+    // Required fields (visible only)
     form.querySelectorAll('[required]').forEach(function(el){
-      var field = el.closest('.field');
-      var valid = el.value.trim() !== '' && !(el.type==='email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(el.value));
-      if(el.offsetParent === null) valid = true; // skip hidden
-      field.classList.toggle('invalid', !valid);
-      if(!valid) ok = false;
+      if(el.offsetParent === null){ el.closest('.field').classList.remove('invalid'); return; }
+      var v = el.value.trim();
+      var valid = v !== '', msg = 'This field is required.';
+      if(valid && el.type==='email'){ valid = isEmail(v); if(!valid) msg = 'Please enter a valid email address.'; }
+      if(valid && el.id==='cell'){ valid = isPhone(v); if(!valid) msg = 'Please enter a valid phone number.'; }
+      if(!mark(el, valid, msg)) ok = false;
+    });
+    // Optional fields — validate format only when filled + visible
+    [['workPhone','phone'],['coB_email','email'],['coB_cell','phone']].forEach(function(p){
+      var el = document.getElementById(p[0]);
+      if(!el || el.offsetParent === null) return;
+      var v = el.value.trim();
+      if(v === ''){ el.closest('.field').classList.remove('invalid'); return; }
+      var valid = p[1]==='email' ? isEmail(v) : isPhone(v);
+      if(!mark(el, valid, p[1]==='email' ? 'Please enter a valid email address.' : 'Please enter a valid phone number.')) ok = false;
     });
     return ok;
+  }
+
+  // Label lookup for a field element (for building a readable summary)
+  function labelText(el){
+    var f = el.closest('.field');
+    if(f){ var l = f.querySelector('label'); if(l){ return l.textContent.replace(/\*/g,'').trim(); } }
+    return el.name;
   }
 
   // ---- submit ----
   form.addEventListener('submit', function(e){
     e.preventDefault();
-    if(!validate()){
+    var ok = validate();
+
+    // consent (required)
+    var consentEl = document.getElementById('consent');
+    var consentField = consentEl.closest('.field');
+    if(!consentEl.checked){ consentField.classList.add('invalid'); ok = false; }
+    else { consentField.classList.remove('invalid'); }
+
+    if(!ok){
       var firstErr = form.querySelector('.field.invalid');
       if(firstErr) firstErr.scrollIntoView({behavior:'smooth',block:'center'});
       return;
@@ -619,16 +724,109 @@
     var btn = document.getElementById('submitBtn');
     btn.disabled = true; btn.textContent = 'Submitting…';
 
-    // Collect data (visible fields only)
-    var data = {};
+    // Collect visible fields -> flat map (fields) + readable list (summary)
+    var fields = {};
+    var summary = [];
     form.querySelectorAll('input,select,textarea').forEach(function(el){
       if(!el.name || el.type==='submit') return;
       if(el.offsetParent === null && el.type!=='checkbox' && el.type!=='radio') return;
-      if(el.type==='checkbox'){ if(el.checked){ (data[el.name]=data[el.name]||[]).push ? data[el.name].push(el.value) : (data[el.name]=[el.value]); } }
-      else if(el.type==='radio'){ if(el.checked) data[el.name]=el.value; }
-      else if(el.value.trim()!=='') data[el.name]=el.value.trim();
+      if(el.type==='checkbox'){
+        if(el.checked){
+          if(el.name==='consent'){ fields.consent = true; }
+          else { (fields[el.name] = fields[el.name] || []).push(el.value); }
+        }
+      } else if(el.type==='radio'){
+        if(el.checked){ fields[el.name] = el.value; summary.push(labelText(el)+': '+el.value); }
+      } else if(el.value.trim()!==''){
+        fields[el.name] = el.value.trim(); summary.push(labelText(el)+': '+el.value.trim());
+      }
     });
-    data['_program'] = program.value;
+    if(Array.isArray(fields.comm)) summary.push('Preferred Communication: '+fields.comm.join(', '));
+
+    // Structured payload — mirrors the calculator's contactInfo pattern.
+    // Every key is always present (defaults to '') so the n8n email template never breaks.
+    var g = function(k){ return fields[k] || ''; };
+    var coBName = (g('coB_fName')+' '+g('coB_lName')).trim();
+    var payload = {
+      formType: 'One Roof Capital - Loan Application',
+      program: program.value,
+      process: g('process'),
+      leadSource: g('leadSource'),
+      submittedAt: new Date().toISOString(),
+      contactInfo: {
+        fullName: ((g('fName'))+' '+(g('lName'))).trim(),
+        firstName: g('fName'),
+        lastName: g('lName'),
+        email: g('email'),
+        phone: g('cell'),
+        workPhone: g('workPhone'),
+        preferredCommunication: Array.isArray(fields.comm) ? fields.comm.join(', ') : '',
+        address: g('address'),
+        city: g('city'),
+        state: g('state'),
+        zip: g('zip'),
+        ssn: g('ssn'),
+        citizenship: g('citizenship'),
+        creditScore: g('credit'),
+        borrowerType: g('borrowerType'),
+        entityName: g('entityName'),
+        entityType: g('entityType'),
+        entityState: g('entityState'),
+        consent: !!fields.consent
+      },
+      coBorrower: {
+        present: !!coBName,
+        fullName: coBName,
+        email: g('coB_email'),
+        phone: g('coB_cell'),
+        ssn: g('coB_ssn'),
+        creditScore: g('coB_credit')
+      },
+      loan: {
+        desiredAmount: g('loanAmount'),
+        term: g('loanTerm'),
+        transactionType: g('txType'),
+        purchasePrice: g('purchasePrice'),
+        personalGuarantee: g('personalGuarantee')
+      },
+      construction: {
+        arv: g('arv'),
+        rehabCost: g('rehabCost'),
+        rehabPct: g('rehabPct'),
+        costSpent: g('costSpent')
+      },
+      refinance: {
+        currentBalance: g('curBalance'),
+        currentLender: g('curLender'),
+        currentRate: g('curRate'),
+        monthlyPayment: g('curPayment'),
+        originalPurchaseDate: g('origDate'),
+        originalPurchasePrice: g('origPrice'),
+        improvements: g('improvements'),
+        payoffTaxes: g('payoffTaxes')
+      },
+      property: {
+        address: g('propAddress'),
+        unit: g('propUnit'),
+        city: g('propCity'),
+        state: g('propState'),
+        zip: g('propZip'),
+        type: g('propType'),
+        estValue: g('estValue'),
+        condition: g('propCondition')
+      },
+      projectDetails: {
+        experience: g('experience'),
+        liquidAssets: g('liquidAssets'),
+        strategy: g('strategy'),
+        needRehab: g('needRehab'),
+        exitPlan: g('exitPlan'),
+        rentalIncome: g('rentalIncome'),
+        exitExplanation: g('exitExplain')
+      },
+      notes: g('notes'),
+      summaryText: summary.join('\n')
+    };
 
     function done(){
       form.style.display='none';
@@ -636,24 +834,12 @@
       document.getElementById('successCard').scrollIntoView({behavior:'smooth',block:'center'});
     }
 
-    if(FORM_ENDPOINT){
-      fetch(FORM_ENDPOINT, {method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(data)})
-        .then(function(r){ if(r.ok){ done(); } else { throw new Error('bad status'); } })
-        .catch(function(){
-          btn.disabled=false; btn.textContent='Submit Application';
-          alert('Sorry, something went wrong sending your application. Please email ' + NOTIFY_EMAIL + ' directly.');
-        });
-    } else {
-      // Fallback: open the visitor's email client pre-filled
-      var lines = Object.keys(data).map(function(k){
-        var v = Array.isArray(data[k]) ? data[k].join(', ') : data[k];
-        return k + ': ' + v;
+    fetch(WEBHOOK_URL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .then(function(r){ if(r.ok){ done(); } else { throw new Error('bad status'); } })
+      .catch(function(){
+        btn.disabled=false; btn.textContent='Submit Application';
+        alert('Sorry, something went wrong submitting your application. Please try again, or email ' + NOTIFY_EMAIL + '.');
       });
-      var subject = 'Loan Application — ' + (data.fName||'') + ' ' + (data.lName||'') + ' (' + program.value + ')';
-      var body = 'New loan application from the One Roof Capital website:\n\n' + lines.join('\n');
-      window.location.href = 'mailto:' + NOTIFY_EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-      setTimeout(done, 600);
-    }
   });
 
   refresh();
